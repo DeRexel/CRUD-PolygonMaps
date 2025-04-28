@@ -1,57 +1,71 @@
 <?php
 require 'db.php';
 
+ob_start();
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id = $_POST['id'] ?? null;
-    $name = $_POST['name'] ?? '';
-    $coordinates = $_POST['coordinates'] ?? '';
-    
-    if (!$id || empty($coordinates)) {
-        die(json_encode(['success' => false, 'message' => 'Missing required fields']));
-    }
-    
-    // Validate coordinates format
-    $coordPairs = explode(',', $coordinates);
-    $validCoords = true;
-    foreach ($coordPairs as $pair) {
-        $parts = explode(' ', trim($pair));
-        if (count($parts) !== 2 || !is_numeric($parts[0]) || !is_numeric($parts[1])) {
-            $validCoords = false;
-            break;
-        }
-    }
-    
-    if (!$validCoords) {
-        die(json_encode(['success' => false, 'message' => 'Invalid coordinates format']));
-    }
+    header('Content-Type: application/json');
     
     try {
+        $id = $_POST['id'] ?? null;
+        $name = $_POST['name'] ?? '';
+        $coordinates = $_POST['coordinates'] ?? '';
+        
+        if (!$id || empty($coordinates)) {
+            throw new Exception('Missing required fields');
+        }
+        
+        // Validate coordinates format
+        $coordPairs = explode(',', $coordinates);
+        foreach ($coordPairs as $pair) {
+            $parts = array_values(array_filter(explode(' ', trim($pair))));
+            if (count($parts) !== 2 || !is_numeric($parts[0]) || !is_numeric($parts[1])) {
+                throw new Exception('Invalid coordinates format');
+            }
+        }
+        
         $db = getDB();
         $wkt = "POLYGON(($coordinates))";
         
-        // First validate the geometry
-        $stmt = $db->prepare("SELECT ST_IsValid(ST_GeomFromText(?)) as valid");
-        $stmt->execute([$wkt]);
-        $result = $stmt->fetch();
-        
-        if (!$result || !$result['valid']) {
-            die(json_encode(['success' => false, 'message' => 'Invalid polygon geometry']));
+        // For MySQL, we'll skip ST_IsValid check since it's not available
+        // Instead, we'll try to create the geometry directly
+        try {
+            $testStmt = $db->prepare("SELECT ST_GeomFromText(?)");
+            $testStmt->execute([$wkt]);
+        } catch (PDOException $e) {
+            throw new Exception('Invalid polygon geometry: ' . $e->getMessage());
         }
         
         // Update the area
         $stmt = $db->prepare("UPDATE areas SET name = ?, geom = ST_GeomFromText(?) WHERE id = ?");
         $stmt->execute([$name, $wkt, $id]);
         
-        header('Content-Type: application/json');
-        echo json_encode(['success' => true, 'redirect' => 'index.php']);
+        if ($stmt->rowCount() === 0) {
+            throw new Exception('No rows were updated - polygon may not exist');
+        }
+        
+        ob_end_clean();
+        echo json_encode([
+            'success' => true, 
+            'message' => 'Polygon updated successfully',
+            'redirect' => 'index.php'
+        ]);
         exit;
-    } catch (PDOException $e) {
-        die(json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]));
+        
+    } catch (Exception $e) {
+        ob_end_clean();
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+        exit;
     }
 }
 
-// Display edit form
+// Handle GET request
 if (isset($_GET['id'])) {
     $id = $_GET['id'];
     
@@ -65,7 +79,6 @@ if (isset($_GET['id'])) {
             die("Area not found");
         }
         
-        // Extract coordinates from WKT
         $coordinates = str_replace(['POLYGON((', '))'], '', $area['wkt']);
     } catch (PDOException $e) {
         die("Database error: " . $e->getMessage());
@@ -73,6 +86,8 @@ if (isset($_GET['id'])) {
 } else {
     die("Missing area ID");
 }
+
+ob_end_clean();
 ?>
 
 <!DOCTYPE html>

@@ -210,41 +210,30 @@ try {
                     confirmButtonText: 'Yes, delete it!'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Create a form to send the data
                         const formData = new FormData();
                         formData.append('id', id);
                         
-                        // Send POST request to delete the area
                         fetch('delete_area.php', {
                             method: 'POST',
                             body: formData
                         })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
-                            }
-                            return response.json();
-                        })
+                        .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                // Remove from map
                                 if (polygons[id]) {
                                     map.removeLayer(polygons[id]);
                                     delete polygons[id];
                                 }
                                 
-                                // Remove from list
                                 const item = document.querySelector(`.area-item[data-id="${id}"]`);
                                 if (item) item.remove();
                                 
-                                // Show success message
                                 Swal.fire(
                                     'Deleted!',
                                     'The area has been deleted.',
                                     'success'
                                 );
                                 
-                                // If no areas left, show empty state
                                 if (document.querySelectorAll('.area-item').length === 0) {
                                     document.getElementById('areaList').innerHTML = `
                                         <div class="empty-state">
@@ -264,7 +253,7 @@ try {
                         .catch(error => {
                             Swal.fire(
                                 'Error!',
-                                'An error occurred while deleting the area.',
+                                error.message || 'An error occurred while deleting the area.',
                                 'error'
                             );
                         });
@@ -272,6 +261,7 @@ try {
                 });
             });
         });
+
     </script>
 </body>
 </html>

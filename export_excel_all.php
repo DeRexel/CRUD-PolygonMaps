@@ -1,5 +1,8 @@
 <?php
+// Ensure no output before headers
+ob_start();
 require 'db.php';
+ob_end_clean();
 
 try {
     $db = getDB();
@@ -10,6 +13,9 @@ try {
         showEmptyState();
     }
     
+    // Clear any previous output
+    if (ob_get_level()) ob_end_clean();
+    
     // Set headers for CSV download
     header("Content-Type: text/csv");
     header("Content-Disposition: attachment; filename=all_areas_coordinates.csv");
@@ -18,7 +24,7 @@ try {
     // Output CSV data
     $output = fopen("php://output", "w");
     
-    // Write headers with escape character explicitly set
+    // Write headers
     fputcsv($output, ["Area ID", "Area Name", "WKT Format", "Latitude", "Longitude"], ',', '"', '\\');
     
     foreach ($areas as $area) {
