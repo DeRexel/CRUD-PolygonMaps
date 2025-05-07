@@ -56,9 +56,9 @@ try {
                     <?php else: ?>
                         <?php foreach ($areas as $area): ?>
                             <div class="area-item" 
-                                 data-id="<?= htmlspecialchars($area['id']) ?>" 
-                                 data-wkt="<?= htmlspecialchars($area['wkt']) ?>">
-                                <span><?= htmlspecialchars($area['name']) ?></span>
+                                data-id="<?= htmlspecialchars($area['id']) ?>" 
+                                data-wkt="<?= htmlspecialchars($area['wkt']) ?>">
+                                <span class="area-name"><?= htmlspecialchars($area['name']) ?></span>
                                 <div class="area-actions">
                                     <a href="edit_area.php?id=<?= $area['id'] ?>" 
                                     class="btn btn-primary btn-sm btn-icon" 
