@@ -39,19 +39,19 @@ A web-based application for creating, managing, and exporting geographic polygon
 
 - **Backend**:
   - PHP 7.4+
-  - MySQL 5.7+ with spatial extensions
+  - MySQL 5.7+
   - PDO for database access
 
 - **Spatial Data**:
   - Well-Known Text (WKT) format
-  - MySQL spatial functions (ST_GeomFromText, ST_AsText)
-
+  - MySQL
+    
 ## Installation
 
 1. **Prerequisites**:
    - Web server (Apache/Nginx)
    - PHP 7.4+
-   - MySQL 5.7+ with spatial support
+   - MySQL 5.7+ 
 
 2. **Database Setup**:
    ```sql
