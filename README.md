@@ -2,7 +2,7 @@
 
 ![Application Screenshot](https://github.com/user-attachments/assets/773e19cd-0e18-4d71-9e28-c8a4363c7361)
 
-**deployment : https://elder.my.id/maps/**
+**deployment : https://maps.elder.my.id/**
 
 A web-based application for creating, managing, and exporting geographic polygons with various input methods. Built with PHP, MySQL, and Leaflet.js.
 
